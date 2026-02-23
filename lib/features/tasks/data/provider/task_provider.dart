@@ -18,14 +18,38 @@ final taskServiceProvider = Provider<TaskService>((ref) {
 /// STATE
 class TaskState {
   final bool isLoading;
+  final bool isFetchingMore;
+  final bool hasMore;
+  final int skip;
+  final int limit;
   final List<Task> tasks;
   final String? error;
 
-  TaskState({this.isLoading = false, this.tasks = const [], this.error});
+  TaskState({
+    this.isLoading = false,
+    this.isFetchingMore = false,
+    this.hasMore = true,
+    this.skip = 0,
+    this.limit = 10,
+    this.tasks = const [],
+    this.error,
+  });
 
-  TaskState copyWith({bool? isLoading, List<Task>? tasks, String? error}) {
+  TaskState copyWith({
+    bool? isLoading,
+    bool? isFetchingMore,
+    bool? hasMore,
+    int? skip,
+    int? limit,
+    List<Task>? tasks,
+    String? error,
+  }) {
     return TaskState(
       isLoading: isLoading ?? this.isLoading,
+      isFetchingMore: isFetchingMore ?? this.isFetchingMore,
+      hasMore: hasMore ?? this.hasMore,
+      skip: skip ?? this.skip,
+      limit: limit ?? this.limit,
       tasks: tasks ?? this.tasks,
       error: error,
     );
@@ -41,33 +65,52 @@ final taskProvider = StateNotifierProvider<TaskNotifier, TaskState>(
 class TaskNotifier extends StateNotifier<TaskState> {
   final Ref ref;
 
-  TaskNotifier(this.ref) : super(TaskState()) {
-    fetchTasks();
-  }
+  TaskNotifier(this.ref) : super(TaskState());
 
   /// FETCH
-  Future<void> fetchTasks() async {
-    state = state.copyWith(isLoading: true, error: null);
+  Future<void> fetchTasks({bool isLoadMore = false}) async {
+    if (state.isFetchingMore || !state.hasMore) return;
+
+    if (isLoadMore) {
+      state = state.copyWith(isFetchingMore: true);
+    } else {
+      state = state.copyWith(isLoading: true, skip: 0, hasMore: true);
+    }
 
     try {
       final service = ref.read(taskServiceProvider);
-      final response = await service.fetchTasks();
+
+      final response = await service.fetchTasks(
+        skip: isLoadMore ? state.skip : 0,
+        limit: state.limit,
+      );
 
       if (response.statusCode == 200) {
-        final List data = response.data["data"]; // ✅ FIX HERE
+        final List data = response.data["data"];
 
-        final tasks = data.map((e) => Task.fromJson(e)).toList();
+        final newTasks = data.map((e) => Task.fromJson(e)).toList();
 
-        state = state.copyWith(tasks: tasks, isLoading: false);
-      } else {
+        final allTasks = isLoadMore ? [...state.tasks, ...newTasks] : newTasks;
+
         state = state.copyWith(
+          tasks: allTasks,
           isLoading: false,
-          error: "Failed to fetch tasks",
+          isFetchingMore: false,
+          skip: allTasks.length,
+          hasMore: newTasks.length == state.limit,
         );
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        isFetchingMore: false,
+        error: e.toString(),
+      );
     }
+  }
+
+  Future<void> loadMore() async {
+    await fetchTasks(isLoadMore: true);
   }
 
   /// CREATE
@@ -113,9 +156,9 @@ class TaskNotifier extends StateNotifier<TaskState> {
       final service = ref.read(taskServiceProvider);
       final response = await service.updateTask(task);
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         final updatedTask = Task.fromJson(response.data);
-
+        await fetchTasks();
         final updatedList = state.tasks.map((t) {
           return t.id == updatedTask.id ? updatedTask : t;
         }).toList();

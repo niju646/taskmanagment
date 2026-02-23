@@ -13,7 +13,6 @@ class SplashScreen extends ConsumerStatefulWidget {
 
 class _SplashScreenState extends ConsumerState<SplashScreen>
     with SingleTickerProviderStateMixin {
-  // final StorageService _storageService = StorageService.instance;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -22,7 +21,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   void initState() {
     super.initState();
     _setupAnimations();
-    _navigate();
+    // _navigate();
   }
 
   void _setupAnimations() {
@@ -48,36 +47,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _animationController.forward();
   }
 
-  Future<void> _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2500));
-    if (!mounted) return;
+  // Future<void> _navigate() async {
+  //   await Future.delayed(const Duration(milliseconds: 2500));
 
-    // final user = FirebaseAuth.instance.currentUser;
-    final authState = ref.read(authProvider);
+  //   if (!mounted) return;
 
-    if (authState.user != null) {
-      context.goNamed(RouterConstants.taskscreen);
-    } else {
-      context.goNamed(RouterConstants.login);
-    }
+  //   final user = FirebaseAuth.instance.currentUser;
 
-    // if (user != null) {
-    //   context.goNamed(RouterConstants.taskscreen);
-    // } else {
-    //   context.goNamed(RouterConstants.login);
-    // }
-
-    // final token = await _storageService.getToken();
-
-    // if (!mounted) return;
-
-    // if (token != null && token.isNotEmpty) {
-    //   context.pushReplacementNamed(RouterConstants.driverHomeScreen);
-    // } else {
-    //   context.pushReplacementNamed(RouterConstants.loginScreen);
-    // }
-    // context.pushReplacementNamed(RouterConstants.signup);
-  }
+  //   if (user != null) {
+  //     context.goNamed(RouterConstants.fetchtasks);
+  //   } else {
+  //     context.goNamed(RouterConstants.login);
+  //   }
+  // }
 
   @override
   void dispose() {
@@ -87,6 +69,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authProvider);
+
+    // WAIT until Firebase finishes restoring session
+    if (!authState.isInitialized) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    // Navigate AFTER initialization
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (authState.user != null) {
+        context.goNamed(RouterConstants.fetchtasks);
+      } else {
+        context.goNamed(RouterConstants.login);
+      }
+    });
     return Scaffold(
       body: SafeArea(
         child: Stack(

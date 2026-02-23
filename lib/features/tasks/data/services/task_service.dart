@@ -4,7 +4,6 @@ import 'package:interview/core/utils/urls/api_end_points.dart';
 import 'package:interview/features/tasks/data/model/task_models.dart';
 
 class TaskService {
-  // final String userId = "1"; // replace later with firebase uid
   final String userId;
 
   TaskService(this.userId);

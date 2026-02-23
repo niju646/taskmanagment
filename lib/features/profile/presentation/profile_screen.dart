@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:interview/core/theme/theme_provider.dart';
 import 'package:interview/features/auth/auth_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:interview/core/routes/router_constants.dart';
 import 'package:interview/features/tasks/data/provider/task_provider.dart';
+import 'package:interview/features/tasks/data/widgets/common_button.dart';
+import 'package:interview/features/tasks/data/widgets/common_text.dart';
+import 'package:interview/features/tasks/data/widgets/custom_snack_bar.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -26,10 +30,11 @@ class ProfileScreen extends ConsumerWidget {
 
                   /// Avatar
                   CircleAvatar(
+                    backgroundColor: Colors.grey.shade400,
                     radius: 50,
                     child: Text(
                       user.email != null ? user.email![0].toUpperCase() : "U",
-                      style: const TextStyle(fontSize: 32),
+                      style: TextStyle(fontSize: 32, color: Colors.black),
                     ),
                   ),
 
@@ -48,20 +53,38 @@ class ProfileScreen extends ConsumerWidget {
 
                   const SizedBox(height: 40),
 
+                  Row(
+                    children: [
+                      CommonText(text: "Dark mode"),
+                      Spacer(),
+                      Switch(
+                        value: ref.watch(themeProvider) == ThemeMode.dark,
+                        onChanged: (value) {
+                          ref.read(themeProvider.notifier).toggleTheme();
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(height: 2),
+                  const SizedBox(height: 20),
+
                   /// Logout Button
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 50),
-                    ),
-                    onPressed: () async {
+                  CommonButton(
+                    title: "Logout",
+                    ontap: () async {
                       await ref.read(authProvider.notifier).logout();
                       ref.invalidate(taskProvider);
 
                       if (!context.mounted) return;
 
                       context.goNamed(RouterConstants.login);
+                      CustomSnackbar.show(
+                        context,
+                        message: "logout successfull",
+                        type: SnackbarType.success,
+                      );
                     },
-                    child: const Text("Logout"),
                   ),
                 ],
               ),

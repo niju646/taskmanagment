@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:interview/features/tasks/data/model/task_models.dart';
 import 'package:interview/features/tasks/data/provider/task_provider.dart';
 import 'package:interview/features/tasks/data/widgets/common_text.dart';
@@ -159,31 +160,44 @@ class _TaskDetailsScreenState extends ConsumerState<TaskDetailsScreen> {
                           backgroundColor: Colors.green,
                         ),
                         onPressed: () async {
+                          if (titleController.text.trim().isEmpty) {
+                            CustomSnackbar.show(
+                              context,
+                              message: "Title cannot be empty",
+                              type: SnackbarType.failure,
+                            );
+                            return;
+                          }
+
                           final updatedTask = Task(
                             id: widget.task.id,
-                            title: titleController.text,
-                            description: descriptionController.text,
+                            title: titleController.text.trim(),
+                            description:
+                                descriptionController.text.trim().isNotEmpty
+                                ? descriptionController.text.trim()
+                                : null,
                             priority: selectedPriority,
                             category: selectedCategory,
                             dueDate: dueDateController.text.isNotEmpty
-                                ? DateTime.parse(dueDateController.text)
+                                ? DateTime.tryParse(dueDateController.text)
                                 : null,
                             isCompleted: widget.task.isCompleted,
                           );
 
+                          setState(() {}); // optional: force rebuild if needed
+
                           await ref
                               .read(taskProvider.notifier)
                               .updateTask(updatedTask);
+
                           if (!context.mounted) return;
+
                           CustomSnackbar.show(
                             context,
-                            message: "Task updated Successfully",
+                            message: "Task updated successfully",
                             type: SnackbarType.success,
                           );
-
-                          if (context.mounted) {
-                            Navigator.pop(context);
-                          }
+                          context.pop();
                         },
                         child: const Text(
                           "Update Task",

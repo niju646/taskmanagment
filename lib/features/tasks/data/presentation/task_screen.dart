@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:interview/core/routes/router_constants.dart';
-import 'package:interview/core/theme/theme_provider.dart';
-import 'package:interview/features/auth/auth_provider.dart';
 import 'package:interview/features/tasks/data/model/task_models.dart';
 import 'package:interview/features/tasks/data/provider/task_provider.dart';
 import 'package:interview/features/tasks/data/widgets/common_text.dart';
@@ -39,51 +36,18 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // final taskState = ref.watch(taskProvider);
-    final user = ref.watch(authProvider).user;
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text("Task"),
-        automaticallyImplyLeading: false,
+        title: Text("Task", style: TextStyle(fontSize: 20)),
+
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.dark_mode),
-            onPressed: () {
-              ref.read(themeProvider.notifier).toggleTheme();
-            },
-          ),
-          IconButton(
-            onPressed: () {
-              context.pushNamed(RouterConstants.profile);
-            },
-            icon: const Icon(Icons.person),
-          ),
-          // IconButton(
-          //   icon: const Icon(Icons.logout),
-          //   onPressed: () async {
-          //     await ref.read(authProvider.notifier).logout();
-
-          //     if (!context.mounted) return;
-
-          //     context.goNamed(RouterConstants.login);
-          //     CustomSnackbar.show(
-          //       context,
-          //       message: "logout successfull",
-          //       type: SnackbarType.success,
-          //     );
-          //   },
-          // ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18),
         child: SingleChildScrollView(
           child: Column(
             children: [
-              CommonText(text: "Welcome  ${user?.email}"),
               CommonText(text: "Enter Title:"),
               const SizedBox(height: 10),
               CommonTextField(hintText: 'Title', controller: titleController),
@@ -201,6 +165,8 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
                     priorityController.clear();
                     categoryController.clear();
                     dueDateController.clear();
+
+                    context.pop();
                   },
                   child: const Text(
                     "Create",
@@ -213,13 +179,6 @@ class _TaskScreenState extends ConsumerState<TaskScreen> {
             ],
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.black,
-        child: const Icon(Icons.list, color: Colors.white),
-        onPressed: () {
-          context.pushNamed(RouterConstants.fetchtasks);
-        },
       ),
     );
   }

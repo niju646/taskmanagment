@@ -80,7 +80,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           final authState = ref.read(authProvider);
                           if (!context.mounted) return;
                           if (authState.user != null) {
-                            context.goNamed(RouterConstants.taskscreen);
+                            context.goNamed(RouterConstants.fetchtasks);
                             CustomSnackbar.show(
                               context,
                               message: "User created successfully",

@@ -77,7 +77,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     final state = ref.read(authProvider);
                     if (!context.mounted) return;
                     if (state.user != null) {
-                      context.pushNamed(RouterConstants.taskscreen);
+                      context.pushNamed(RouterConstants.fetchtasks);
                       CustomSnackbar.show(
                         context,
                         message: "Login successfull",
